@@ -7,10 +7,12 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -27,19 +29,22 @@ class MainActivity : AppCompatActivity() {
 
     private val myCoroutineScope = CoroutineScope(Dispatchers.IO)
 
-    private val okHttpClient = OkHttpClient.Builder()
-        .readTimeout(READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
-        .connectTimeout(CONNECTION_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
-        .build()
-
-    private val retrofit = Retrofit.Builder()
-        .client(okHttpClient)
-        .baseUrl(DEV_BASE_URL)
-        .addConverterFactory(MoshiConverterFactory.create(moshiBuilder))
-        .build()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val okHttpClient = OkHttpClient.Builder()
+            .readTimeout(READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
+            .connectTimeout(CONNECTION_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
+            .addInterceptor(ChuckerInterceptor(this))
+            .build()
+
+        val retrofit = Retrofit.Builder()
+            .client(okHttpClient)
+            .baseUrl(DEV_BASE_URL)
+            .addConverterFactory(MoshiConverterFactory.create(moshiBuilder))
+            .build()
+
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
@@ -49,11 +54,21 @@ class MainActivity : AppCompatActivity() {
         }
 
         myCoroutineScope.launch {
-            val response = retrofit.create(ApiExemple::class.java).getPost()
+            val response = retrofit.create(ApiExemple::class.java).getPost(id = 1)
             Log.e("response",response.toString())
             withContext(Dispatchers.Main){
                 findViewById<TextView>(R.id.tw1).setText(response.title)
                 findViewById<TextView>(R.id.tw2).setText(response.body)
+            }
+        }
+
+        myCoroutineScope.launch {
+            delay(15000)
+            val response = retrofit.create(ApiExemple::class.java).getPost(id = 2)
+            Log.e("response",response.toString())
+            withContext(Dispatchers.Main){
+                findViewById<TextView>(R.id.tw3).setText(response.title)
+                findViewById<TextView>(R.id.tw4).setText(response.body)
             }
         }
     }

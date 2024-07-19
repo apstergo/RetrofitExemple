@@ -50,4 +50,6 @@ dependencies {
     api(libs.retrofit)
     implementation(libs.bundles.moshi)
     implementation(libs.bundles.okhttp)
+
+    implementation("com.github.chuckerteam.chucker:library:4.0.0")
 }
